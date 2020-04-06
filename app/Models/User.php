@@ -29,7 +29,7 @@ class User extends Authenticatable implements MustVerifyEmailContract, JWTSubjec
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'session_key', 'openid'
+        'name', 'identity', 'openid', 'session_key'
     ];
 
     /**
@@ -38,7 +38,7 @@ class User extends Authenticatable implements MustVerifyEmailContract, JWTSubjec
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'session_key', 'openid'
     ];
 
     /**
