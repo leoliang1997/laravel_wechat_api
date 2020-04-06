@@ -26,6 +26,14 @@ $app = new Illuminate\Foundation\Application(
 |
 */
 
+try {
+    $site_idc = get_cfg_var('site_idc');
+    $file = in_array($site_idc, ['prod', 'dev', 'test']) ? '.env.' . $site_idc : '.env';
+    $app->loadEnvironmentFrom($file);
+} catch (Exception $e) {
+//
+}
+
 $app->singleton(
     Illuminate\Contracts\Http\Kernel::class,
     App\Http\Kernel::class
