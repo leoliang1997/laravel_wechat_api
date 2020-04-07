@@ -15,6 +15,7 @@ class AddWeixinOpenidToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->integer('identity')->default(0);
+            $table->string('uid')->unique();
             $table->string('openid')->unique();
             $table->string('session_key');
             $table->string('email')->nullable()->change();
@@ -31,6 +32,7 @@ class AddWeixinOpenidToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('identity');
+            $table->dropColumn('uid');
             $table->dropColumn('openid');
             $table->dropColumn('session_key');
             $table->string('email')->nullable(false)->change();

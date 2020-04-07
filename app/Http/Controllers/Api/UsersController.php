@@ -32,12 +32,13 @@ class UsersController extends Controller
 
         $user = User::where('openid', $data['openid'])->first();
         if ($user) {
-            return error(-2,'请勿重复注册!')->setStatusCode(401);
+            return error(-2, '请勿重复注册!')->setStatusCode(401);
         }
 
         $user = User::create([
             'name' => $request->name,
             'identity' => $request->identity,
+            'uid' => User::getUid($request->identity),
             'openid' =>  $data['openid'],
             'session_key' => $data['session_key'],
         ]);
