@@ -18,14 +18,14 @@ Route::namespace('Api')->group(function () {
     Route::post('register', 'UsersController@register')->name('users.register');
     // 登录
     Route::post('login', 'UsersController@login')->name('login');
-
+    // 刷新token
+    Route::post('refresh', 'UsersController@update')->name('users.update');
 });
 
 
 Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::get('info', 'UsersController@info')->name('users.info');
-    // 刷新token
-    Route::post('refresh', 'UsersController@update')->name('users.update');
+
     // 删除token
     Route::post('logout', 'UsersController@destroy')->name('users.destroy');
 });
