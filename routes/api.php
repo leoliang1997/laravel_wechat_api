@@ -25,7 +25,7 @@ Route::namespace('Api')->group(function () {
 Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::get('info', 'UsersController@info')->name('users.info');
     // 刷新token
-    Route::put('refresh', 'UsersController@update')->name('users.update');
+    Route::post('refresh', 'UsersController@update')->name('users.update');
     // 删除token
     Route::post('logout', 'UsersController@destroy')->name('users.destroy');
 });
