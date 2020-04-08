@@ -75,7 +75,7 @@ class UsersController extends Controller
     public function destroy()
     {
         auth('api')->logout();
-        return success([], 0, '退出成功')->setStatusCode(204);
+        return success([], 0, '退出成功');
     }
 
     protected function respondWithToken($token, $name, $identity)
