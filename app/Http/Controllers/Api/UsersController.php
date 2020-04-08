@@ -45,7 +45,7 @@ class UsersController extends Controller
 
         $token = auth('api')->login($user);
 
-        return $this->respondWithToken($token)->setStatusCode(201);
+        return $this->respondWithToken($token, $user->name, $user->identity);
     }
 
     public function login(Request $request)
@@ -69,24 +69,20 @@ class UsersController extends Controller
         }
         $token = auth('api')->login($user);
 
-        return $this->respondWithToken($token)->setStatusCode(200);
-    }
-
-    public function update()
-    {
-        $token = auth('api')->refresh();
-        return $this->respondWithToken($token);
+        return $this->respondWithToken($token, $user->name, $user->identity);
     }
 
     public function destroy()
     {
         auth('api')->logout();
-        return success()->setStatusCode(204);
+        return success([], 0, '退出成功')->setStatusCode(204);
     }
 
-    protected function respondWithToken($token)
+    protected function respondWithToken($token, $name, $identity)
     {
         $data = [
+            'name' => $name,
+            'identity' => $identity,
             'access_token' => $token,
             'token_type' => 'Bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60
