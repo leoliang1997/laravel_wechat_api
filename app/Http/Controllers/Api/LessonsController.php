@@ -158,7 +158,8 @@ class LessonsController extends Controller
         foreach ($lessons as $lesson) {
             $list[] = [
                 'cid' => $lesson->cid,
-                'name' => $lesson->name
+                'name' => $lesson->name,
+                'status' => $lesson->status
             ];
         }
 
