@@ -19,12 +19,12 @@ class LessonPolicy
 
     }
 
-    public function create(User $user)
+    public function teacher(User $user)
     {
         return $user->isTeacher();
     }
 
-    public function join(User $user)
+    public function student(User $user)
     {
         return $user->isStudent();
     }

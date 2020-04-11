@@ -51,4 +51,9 @@ class Lesson extends Model
 
         return self::PREFIX.str_pad($cid, 8, '0', STR_PAD_LEFT);
     }
+
+    public function isSignInNow()
+    {
+        return $this->status === self::STATUS_NOW;
+    }
 }
