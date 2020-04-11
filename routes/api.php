@@ -25,4 +25,9 @@ Route::namespace('Api')->group(function () {
 
 Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::get('info', 'UsersController@info')->name('users.info');
+    Route::post('create-lesson', 'LessonsController@create')->name('lessons.create');
+    Route::get('lesson-list', 'LessonsController@lessonList')->name('lessons.lessonList');
+    Route::post('join', 'LessonsController@join')->name('lessons.join');
+    Route::get('my-lesson', 'LessonsController@myLession')->name('lessons.myLesson');
+    Route::get('student-list', 'LessonsController@studentList')->name('lessons.studentList');
 });

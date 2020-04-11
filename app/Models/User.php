@@ -92,6 +92,16 @@ class User extends Authenticatable implements MustVerifyEmailContract, JWTSubjec
         return [];
     }
 
+    public function isTeacher()
+    {
+        return $this->identity === self::IDENTITY_TEACHER;
+    }
+
+    public function isStudent()
+    {
+        return $this->identity === self::IDENTITY_STUDENT;
+    }
+
     public static function getUid($identity)
     {
         $model = self::whereIdentity($identity)
