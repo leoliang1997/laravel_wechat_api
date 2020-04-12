@@ -86,7 +86,7 @@ class LessonsController extends Controller
                 'page_count' => ceil($totalCount / $request->page_size),
                 'total_count' => $totalCount
             ],
-            'list' => $list
+            'list' => array_values($list)
         ];
 
         return success($data);
@@ -410,7 +410,7 @@ class LessonsController extends Controller
                 'page_count' => ceil($totalCount / $request->page_size),
                 'total_count' => $totalCount
             ],
-            'list' => $list
+            'list' => array_values($list)
         ];
 
         return success($data);
