@@ -21,10 +21,12 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\StudentSignInLog whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\StudentSignInLog whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property float $distance
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\StudentSignInLog whereDistance($value)
  */
 class StudentSignInLog extends Model
 {
     protected $fillable = [
-        'uid', 'kid'
+        'uid', 'kid', 'distance'
     ];
 }

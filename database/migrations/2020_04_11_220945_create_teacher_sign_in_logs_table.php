@@ -17,6 +17,8 @@ class CreateTeacherSignInLogsTable extends Migration
             $table->bigIncrements('kid');
             $table->string('cid');
             $table->string('command');
+            $table->double('latitude');
+            $table->double('longitude');
             $table->timestamps();
         });
     }

@@ -21,10 +21,14 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereKid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property float $latitude
+ * @property float $longitude
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereLatitude($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereLongitude($value)
  */
 class TeacherSignInLog extends Model
 {
     protected $fillable = [
-        'cid', 'command'
+        'cid', 'command', 'latitude', 'longitude'
     ];
 }

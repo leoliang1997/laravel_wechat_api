@@ -17,6 +17,7 @@ class CreateStudentSignInLogsTable extends Migration
             $table->bigIncrements('id');
             $table->string('uid');
             $table->integer('kid');
+            $table->double('distance');
             $table->timestamps();
         });
     }

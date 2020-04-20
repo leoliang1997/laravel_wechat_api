@@ -34,4 +34,5 @@ Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::post('end-sign-in','LessonsController@endSignIn')->name('lessons.endSignIn');
     Route::get('sign-in-history','LessonsController@signInHistory')->name('lessons.signInHistory');
     Route::get('sign-in-detail','LessonsController@signInDetail')->name('lessons.signInDetail');
+    Route::get('sign-in-status', 'LessonsController@signInStatus')->name('lessons.signInStatus');
 });

@@ -233,9 +233,14 @@ class LessonsController extends Controller
         $this->validate($request, [
             'cid' => 'required|string',
             'command' => 'required|string',
+            'latitude' => 'required|double',
+            'longitude' => 'required|double'
         ]);
         $cid = $request->cid;
         $command = $request->command;
+        $latitude = $request->latitude;
+        $longitude = $request->longitude;
+
         /**
          * @var User $user
          */
@@ -247,9 +252,16 @@ class LessonsController extends Controller
             if (empty($lesson)) {
                 return error(-1, '课程不存在!');
             }
+
             if ($lesson->isSignInNow()) {
-                return error(-1, '课程正在签到，不能重复发起！');
+                return error(-1, '课程正在签到，不能重复发起!');
             }
+
+            $studentCount = LessonStudentRelation::whereCid($cid)->count();
+            if (!$studentCount) {
+                return error(-1, '该课程没有学生，无法签到!');
+            }
+
             $lesson->status = Lesson::STATUS_NOW;
             $lesson->save();
 
@@ -258,11 +270,13 @@ class LessonsController extends Controller
 
             TeacherSignInLog::create([
                 'cid' => $cid,
-                'command' => $command
+                'command' => $command,
+                'latitude' => $latitude,
+                'longitude' => $longitude
             ]);
         } else {
             if (!$lesson->isSignInNow()) {
-                return error(-1, '该课程未在签到！');
+                return error(-1, '该课程未在签到!');
             }
 
             $lessonStudentRelation = LessonStudentRelation::where('uid', '=', $user->uid)
@@ -283,12 +297,20 @@ class LessonsController extends Controller
                 return error(-1, '口令错误!');
             }
 
+            $distance = $this->getDistance($latitude, $longitude,
+                $teacherSignInLog->latitude, $teacherSignInLog->longitude);
+
+            if ($distance > 200) {
+                return error(-1, '不在签到范围!');
+            }
+
             $lessonStudentRelation->status = LessonStudentRelation::STATUS_DONE;
             $lessonStudentRelation->save();
 
             StudentSignInLog::create([
-               'uid' => $user->uid,
-               'kid' => $teacherSignInLog->kid
+                'uid' => $user->uid,
+                'kid' => $teacherSignInLog->kid,
+                'distance' => $distance
             ]);
         }
 
@@ -394,12 +416,14 @@ class LessonsController extends Controller
             $list[$user->uid] = [
                 'uid' => $user->uid,
                 'name' => $user->name,
+                'distance' => 0,
                 'status' => LessonStudentRelation::STATUS_NOT
             ];
         }
         foreach ($studentLogs as $studentLog) {
             if (isset($list[$studentLog->uid])) {
                 $list[$studentLog->uid]['status'] = LessonStudentRelation::STATUS_DONE;
+                $list[$studentLog->uid]['distance'] = $studentLog->distance;
             }
         }
 
@@ -414,5 +438,34 @@ class LessonsController extends Controller
         ];
 
         return success($data);
+    }
+
+    public function signInStatus(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string'
+        ]);
+
+        $model = Lesson::whereCid($request->cid)->first();
+
+        if (empty($model)) {
+            return error(-1, '课程id无效!');
+        }
+
+        return success(['status' => $model->status]);
+    }
+
+    private function getDistance($srcLatitude, $srcLongitude, $desLatitude, $desLongitude)
+    {
+        $radLat1 = deg2rad($srcLatitude);//deg2rad()函数将角度转换为弧度
+        $radLat2 = deg2rad($desLatitude);
+        $radLng1 = deg2rad($srcLongitude);
+        $radLng2 = deg2rad($desLongitude);
+        $a = $radLat1 - $radLat2;
+        $b = $radLng1 - $radLng2;
+        $s = 2 * asin(sqrt((sin($a / 2) ** 2) + cos($radLat1) * cos($radLat2) * (sin($b / 2) ** 2))) * 6378.137;
+        $s *= 1000;
+
+        return round($s, 2);//返回距离米
     }
 }
