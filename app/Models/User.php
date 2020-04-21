@@ -109,7 +109,7 @@ class User extends Authenticatable implements MustVerifyEmailContract, JWTSubjec
             ->first('uid');
 
         if ($model === null) {
-            return self::PREFIX[$identity].'0000001';
+            return self::PREFIX[$identity].'00000001';
         }
 
         $uid = (string)(substr($model->uid, 1) + 1);

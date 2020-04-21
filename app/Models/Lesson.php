@@ -44,7 +44,7 @@ class Lesson extends Model
         $model = self::orderBy('created_at', 'DESC')->first('cid');
 
         if ($model === null) {
-            return self::PREFIX.'0000001';
+            return self::PREFIX.'00000001';
         }
 
         $cid = (string)(substr($model->cid, 1) + 1);
