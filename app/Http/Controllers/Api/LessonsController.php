@@ -233,8 +233,8 @@ class LessonsController extends Controller
         $this->validate($request, [
             'cid' => 'required|string',
             'command' => 'required|string',
-            'latitude' => 'required|double',
-            'longitude' => 'required|double'
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric'
         ]);
         $cid = $request->cid;
         $command = $request->command;
