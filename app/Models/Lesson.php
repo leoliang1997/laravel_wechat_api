@@ -56,4 +56,9 @@ class Lesson extends Model
     {
         return $this->status === self::STATUS_NOW;
     }
+
+    public function isMyLesson($uid)
+    {
+        return $this->uid === $uid;
+    }
 }

@@ -245,11 +245,9 @@ class LessonsController extends Controller
          * @var User $user
          */
         $user = $request->user();
-        $lesson = Lesson::where('cid', '=', $cid)
-            ->where('uid', '=', $user->uid)
-            ->first();
+        $lesson = Lesson::where('cid', '=', $cid)->first();
         if ($user->isTeacher()) {
-            if (empty($lesson)) {
+            if (empty($lesson) || !$lesson->isMyLesson($user->uid)) {
                 return error(-1, '课程不存在!');
             }
 
@@ -275,6 +273,10 @@ class LessonsController extends Controller
                 'longitude' => $longitude
             ]);
         } else {
+            if (empty($lesson)) {
+                return error(-1, '课程不存在!');
+            }
+
             if (!$lesson->isSignInNow()) {
                 return error(-1, '该课程未在签到!');
             }
@@ -336,6 +338,15 @@ class LessonsController extends Controller
         $lesson->status = Lesson::STATUS_DONE;
         $lesson->save();
 
+        $teacherSignInLog = TeacherSignInLog::whereCid($cid)
+            ->orderBy('created_at', 'DESC')
+            ->first();
+
+        if (!empty($teacherSignInLog)) {
+            $teacherSignInLog->updated_at = date('Y-m-d H:i:s');
+            $teacherSignInLog->save();
+        }
+
         return success();
     }
 
@@ -358,17 +369,23 @@ class LessonsController extends Controller
         $list = [];
         foreach ($teacherLogs as $log) {
             $cids[] = $log->cid;
-            $list[$log->cid] = [
+            $list[] = [
                 'kid' => $log->kid,
-                'start_time' => $log->created_at,
-                'end_time' => $log->updated_at
+                'cid' => $log->cid,
+                'start_time' => $log->created_at->format('Y-m-d H:i:s'),
+                'end_time' => $log->updated_at->format('Y-m-d H:i:s')
             ];
         }
         $lessons = Lesson::whereIn('cid', $cids)->get();
+        $cnameList = [];
 
         foreach ($lessons as $lesson) {
-            if (isset($list[$lesson->cid])) {
-                $list[$lesson->cid]['name'] = $lesson->name;
+            $cnameList[$lesson->cid] = $lesson->name;
+        }
+
+        foreach ($list as $key => $value) {
+            if (isset($cnameList[$value['cid']])) {
+                $list[$key]['name'] = $cnameList[$value['cid']];
             }
         }
 
