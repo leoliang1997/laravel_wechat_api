@@ -10,6 +10,7 @@ namespace App\Http\Controllers\Api;
 
 
 use App\Http\Controllers\Controller;
+use App\Models\File;
 use App\Models\Lesson;
 use App\Models\LessonStudentRelation;
 use App\Models\StudentSignInLog;
@@ -79,15 +80,7 @@ class LessonsController extends Controller
             }
         }
 
-        $data = [
-            'page' => [
-                'page' => (int)$request->page,
-                'page_size' => (int)$request->page_size,
-                'page_count' => ceil($totalCount / $request->page_size),
-                'total_count' => $totalCount
-            ],
-            'list' => array_values($list)
-        ];
+        $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
         return success($data);
     }
@@ -166,15 +159,7 @@ class LessonsController extends Controller
             ];
         }
 
-        $data = [
-            'page' => [
-                'page' => (int)$request->page,
-                'page_size' => (int)$request->page_size,
-                'page_count' => ceil($totalCount / $request->page_size),
-                'total_count' => $totalCount
-            ],
-            'list' => $list
-        ];
+        $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
         return success($data);
     }
@@ -215,15 +200,7 @@ class LessonsController extends Controller
             ];
         }
 
-        $data = [
-            'page' => [
-                'page' => (int)$request->page,
-                'page_size' => (int)$request->page_size,
-                'page_count' => ceil($totalCount / $request->page_size),
-                'total_count' => $totalCount
-            ],
-            'list' => $list
-        ];
+        $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
         return success($data);
     }
@@ -299,7 +276,7 @@ class LessonsController extends Controller
                 return error(-1, '口令错误!');
             }
 
-            $distance = $this->getDistance($latitude, $longitude,
+            $distance = getDistance($latitude, $longitude,
                 $teacherSignInLog->latitude, $teacherSignInLog->longitude);
 
             if ($distance > 200) {
@@ -389,15 +366,7 @@ class LessonsController extends Controller
             }
         }
 
-        $data = [
-            'page' => [
-                'page' => (int)$request->page,
-                'page_size' => (int)$request->page_size,
-                'page_count' => ceil($totalCount / $request->page_size),
-                'total_count' => $totalCount
-            ],
-            'list' => array_values($list)
-        ];
+        $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
         return success($data);
     }
@@ -444,15 +413,7 @@ class LessonsController extends Controller
             }
         }
 
-        $data = [
-            'page' => [
-                'page' => (int)$request->page,
-                'page_size' => (int)$request->page_size,
-                'page_count' => ceil($totalCount / $request->page_size),
-                'total_count' => $totalCount
-            ],
-            'list' => array_values($list)
-        ];
+        $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
         return success($data);
     }
@@ -472,17 +433,72 @@ class LessonsController extends Controller
         return success(['status' => $model->status]);
     }
 
-    private function getDistance($srcLatitude, $srcLongitude, $desLatitude, $desLongitude)
+    public function fileList(Request $request)
     {
-        $radLat1 = deg2rad($srcLatitude);//deg2rad()函数将角度转换为弧度
-        $radLat2 = deg2rad($desLatitude);
-        $radLng1 = deg2rad($srcLongitude);
-        $radLng2 = deg2rad($desLongitude);
-        $a = $radLat1 - $radLat2;
-        $b = $radLng1 - $radLng2;
-        $s = 2 * asin(sqrt((sin($a / 2) ** 2) + cos($radLat1) * cos($radLat2) * (sin($b / 2) ** 2))) * 6378.137;
-        $s *= 1000;
+        $this->validate($request, [
+            'page' => 'required|int',
+            'page_size' => 'required|int'
+        ]);
 
-        return round($s, 2);//返回距离米
+        $totalCount = File::count();
+        $offset = $request->page * $request->page_size;
+        $files = File::where('status', '=', File::STATUS_NORMAL)
+            ->limit($request->page_size)
+            ->offset($offset)
+            ->get();
+
+        $cidList = [];
+
+        $list = [];
+
+        foreach ($files as $file) {
+            $list[] = [
+                'file_name' => $file->file_name,
+                'created_at' => $file->created_at->format('Y-m-d H:i:s'),
+                'uploaded_by' => '',
+                'cid' => $file->cid,
+                'download_url' => $file->url
+            ];
+            $cidList[] = $file->cid;
+        }
+
+        $users = User::where('cid', 'in', $cidList)->get();
+        $userNameList = [];
+        foreach ($users as $user) {
+            $userNameList[$user->cid] = $user->name;
+        }
+
+        foreach ($list as $key => $value) {
+            if (isset($userNameList[$value['cid']])) {
+                $list[$key]['uploaded_by'] = $userNameList[$value['cid']];
+            }
+        }
+
+        $data = packageData($request->page, $request->page_size, $totalCount, $list);
+
+        return success($data);
+    }
+
+    public function upload(Request $request)
+    {
+        $this->authorize('teacher', Lesson::class);
+        $this->validate($request, [
+            'file' => 'required'
+        ]);
+
+        $file = $request->file('file');
+        $uploadPath = public_path() . '/uploads/' . time();
+        $fileName = $file->getClientOriginalName(). '.' . $file->getExtension();
+        $downloadUrl = $uploadPath . '/'. $fileName;
+        $file->move($uploadPath, $fileName);
+
+        File::create([
+            'file_name' => $fileName,
+            'url' => $downloadUrl,
+            'uid' => $request->user()->uid,
+            'status' => File::STATUS_NORMAL
+        ]);
+
+        return success();
     }
 }

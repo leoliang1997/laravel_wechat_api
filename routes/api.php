@@ -35,4 +35,6 @@ Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::get('sign-in-history','LessonsController@signInHistory')->name('lessons.signInHistory');
     Route::get('sign-in-detail','LessonsController@signInDetail')->name('lessons.signInDetail');
     Route::get('sign-in-status', 'LessonsController@signInStatus')->name('lessons.signInStatus');
+    Route::post('upload', 'LessonsController@upload')->name('lessons.upload');
+    Route::get('file-list', 'LessonsController@fileList')->name('lessons.fileList');
 });
