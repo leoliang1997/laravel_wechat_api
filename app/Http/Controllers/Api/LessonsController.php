@@ -247,7 +247,8 @@ class LessonsController extends Controller
                 'cid' => $cid,
                 'command' => $command,
                 'latitude' => $latitude,
-                'longitude' => $longitude
+                'longitude' => $longitude,
+                'start_time' => time()
             ]);
         } else {
             if (empty($lesson)) {
@@ -319,12 +320,14 @@ class LessonsController extends Controller
             ->orderBy('created_at', 'DESC')
             ->first();
 
-        if (!empty($teacherSignInLog)) {
-            $teacherSignInLog->updated_at = date('Y-m-d H:i:s');
-            $teacherSignInLog->save();
+        if (empty($teacherSignInLog)) {
+            return error(-1, '签到记录不存在!');
         }
 
-        return success();
+        $teacherSignInLog->end_time = time();
+        $teacherSignInLog->save();
+
+        return success(['kid' => $teacherSignInLog->kid]);
     }
 
     public function signInHistory(Request $request)
@@ -337,6 +340,9 @@ class LessonsController extends Controller
         $cid = $request->cid;
         $offset = $request->page * $request->page_size;
         $totalCount = TeacherSignInLog::where('cid', '=', $cid)->count();
+        /**
+         * @var TeacherSignInLog[] $teacherLogs
+         */
         $teacherLogs = TeacherSignInLog::where('cid', '=', $cid)
             ->limit($request->page_size)
             ->offset($offset)
@@ -345,12 +351,15 @@ class LessonsController extends Controller
         $cids = [];
         $list = [];
         foreach ($teacherLogs as $log) {
+            if (empty($log->end_time)) {
+                continue;
+            }
             $cids[] = $log->cid;
             $list[] = [
                 'kid' => $log->kid,
                 'cid' => $log->cid,
-                'start_time' => $log->created_at->format('Y-m-d H:i:s'),
-                'end_time' => $log->updated_at->format('Y-m-d H:i:s')
+                'start_time' => date('Y-m-d H:i:s', $log->start_time),
+                'end_time' => date('Y-m-d H:i:s', $log->end_time)
             ];
         }
         $lessons = Lesson::whereIn('cid', $cids)->get();

@@ -25,6 +25,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property float $longitude
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereLatitude($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereLongitude($value)
+ * @property int $start_time
+ * @property int $end_time
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereEndTime($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\TeacherSignInLog whereStartTime($value)
  */
 class TeacherSignInLog extends Model
 {
