@@ -19,8 +19,8 @@ class CreateTeacherSignInLogsTable extends Migration
             $table->string('command');
             $table->double('latitude');
             $table->double('longitude');
-            $table->integer('start_time');
-            $table->integer('end_time');
+            $table->integer('start_time')->nullable();
+            $table->integer('end_time')->nullable();
             $table->timestamps();
         });
     }

@@ -33,6 +33,6 @@ use Illuminate\Database\Eloquent\Model;
 class TeacherSignInLog extends Model
 {
     protected $fillable = [
-        'cid', 'command', 'latitude', 'longitude'
+        'cid', 'command', 'latitude', 'longitude', 'start_time', 'end_time'
     ];
 }
