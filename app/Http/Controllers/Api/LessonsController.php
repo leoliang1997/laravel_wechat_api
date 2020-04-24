@@ -57,12 +57,13 @@ class LessonsController extends Controller
             ->get();
 
         $list = [];
-
+        $uidList = [];
         foreach ($lessons as $lesson) {
-            $cid = $lesson->cid;
-            $list[$cid] = [
-                'cid' => $cid,
-                'name' => $lesson->name,
+            $uidList[] = $lesson->uid;
+            $list[$lesson->cid] = [
+                'cid' => $lesson->cid,
+                'lesson_name' => $lesson->name,
+                'uid' => $lesson->uid,
                 'is_join' => 0
             ];
         }
@@ -79,6 +80,8 @@ class LessonsController extends Controller
                 $list[$cid]['is_join'] = 1;
             }
         }
+
+        $this->getTeacherInfo($list, $uidList);
 
         $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
@@ -147,21 +150,42 @@ class LessonsController extends Controller
         }
 
         $list = [];
-
+        $uidList = [];
         /**
          * @var Lesson[] $lessons
          */
         foreach ($lessons as $lesson) {
-            $list[] = [
+            $uidList[] = $lesson->uid;
+            $list[$lesson->cid] = [
                 'cid' => $lesson->cid,
-                'name' => $lesson->name,
+                'uid' => $lesson->uid,
+                'lesson_name' => $lesson->name,
                 'status' => $lesson->status
             ];
         }
 
+        $this->getTeacherInfo($list, $uidList);
+
         $data = packageData($request->page, $request->page_size, $totalCount, $list);
 
         return success($data);
+    }
+
+    private function getTeacherInfo(&$list, $uidList)
+    {
+        /**
+         * @var User[] $teachers
+         */
+        $teachers = User::whereIn('uid', $uidList)->get();
+        foreach ($list as $key => $value) {
+            foreach ($teachers as $teacher) {
+                if ($value['uid'] === $teacher->uid) {
+                    $list[$key]['teacher_name'] = $teacher->name;
+                    break;
+                }
+            }
+        }
+
     }
 
     public function studentList(Request $request)
