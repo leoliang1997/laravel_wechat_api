@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class TeacherSignInLog extends Model
 {
+    protected $primaryKey = 'kid';
+
     protected $fillable = [
         'cid', 'command', 'latitude', 'longitude', 'start_time', 'end_time'
     ];
