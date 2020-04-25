@@ -516,12 +516,13 @@ class LessonsController extends Controller
     {
         $this->authorize('teacher', Lesson::class);
         $this->validate($request, [
-            'file' => 'required'
+            'file' => 'required',
+            'file_name' => 'required|string'
         ]);
 
+        $fileName = $request->file_name;
         $file = $request->file('file');
         $uploadPath = '/uploads/' . time();
-        $fileName = $file->getClientOriginalName();
         $downloadUrl = env('APP_URL') . $uploadPath . '/' . $fileName;
         $file->move(public_path() . $uploadPath, $fileName);
 
