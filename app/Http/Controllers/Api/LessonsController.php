@@ -429,7 +429,7 @@ class LessonsController extends Controller
         }
 
         $users = User::whereIn('uid', $studentIds)->get();
-        $studentLogs = StudentSignInLog::whereIn('uid', $studentIds)->get();
+        $studentLogs = StudentSignInLog::whereKid($kid)->get();
         $list = [];
         foreach ($users as $user) {
             $list[$user->uid] = [
@@ -480,7 +480,7 @@ class LessonsController extends Controller
             ->offset($offset)
             ->get();
 
-        $cidList = [];
+        $uidList = [];
 
         $list = [];
 
@@ -489,21 +489,21 @@ class LessonsController extends Controller
                 'file_name' => $file->file_name,
                 'created_at' => $file->created_at->format('Y-m-d H:i:s'),
                 'uploaded_by' => '',
-                'cid' => $file->cid,
+                'uid' => $file->uid,
                 'download_url' => $file->url
             ];
-            $cidList[] = $file->cid;
+            $uidList[] = $file->uid;
         }
 
-        $users = User::where('cid', 'in', $cidList)->get();
+        $users = User::whereIn('uid', $uidList)->get();
         $userNameList = [];
         foreach ($users as $user) {
             $userNameList[$user->cid] = $user->name;
         }
 
         foreach ($list as $key => $value) {
-            if (isset($userNameList[$value['cid']])) {
-                $list[$key]['uploaded_by'] = $userNameList[$value['cid']];
+            if (isset($userNameList[$value['uid']])) {
+                $list[$key]['uploaded_by'] = $userNameList[$value['uid']];
             }
         }
 
@@ -520,10 +520,10 @@ class LessonsController extends Controller
         ]);
 
         $file = $request->file('file');
-        $uploadPath = public_path() . '/uploads/' . time();
-        $fileName = $file->getClientOriginalName(). '.' . $file->getExtension();
-        $downloadUrl = $uploadPath . '/'. $fileName;
-        $file->move($uploadPath, $fileName);
+        $uploadPath = '/uploads/' . time();
+        $fileName = $file->getClientOriginalName();
+        $downloadUrl = env('APP_URL') . $uploadPath . '/' . $fileName;
+        $file->move(public_path() . $uploadPath, $fileName);
 
         File::create([
             'file_name' => $fileName,
