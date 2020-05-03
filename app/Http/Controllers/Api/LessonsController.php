@@ -770,7 +770,7 @@ class LessonsController extends Controller
             return error(-1, '未在提问时间');
         }
 
-        Question::insert([
+        Question::create([
             'cid' => $request->cid,
             'uid' => $request->user()->uid,
             'content' => $request->question,

@@ -43,6 +43,6 @@ Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::get('qa-status', 'LessonsController@qaStatus')->name('lessons.qaStatus');
     Route::post('start-qa', 'LessonsController@startQa')->name('lessons.startQa');
     Route::post('end-qa', 'LessonsController@endQa')->name('lessons.endQa');
-    Route::post('question-list', 'LessonsController@questionList')->name('lessons.questionList');
+    Route::get('question-list', 'LessonsController@questionList')->name('lessons.questionList');
     Route::post('ask-question', 'LessonsController@askQuestion')->name('lessons.askQuestion');
 });
