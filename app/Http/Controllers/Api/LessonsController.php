@@ -727,7 +727,7 @@ class LessonsController extends Controller
 
         $questions = Question::whereCid($request->cid)
             ->whereStatus(Question::STATUS_NOW)
-            ->limit($request->page)
+            ->limit($request->page_size)
             ->offset($offset)
             ->get();
 
