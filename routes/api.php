@@ -37,4 +37,6 @@ Route::middleware('auth:api')->namespace('Api')->group(function () {
     Route::get('sign-in-status', 'LessonsController@signInStatus')->name('lessons.signInStatus');
     Route::post('upload', 'LessonsController@upload')->name('lessons.upload');
     Route::get('file-list', 'LessonsController@fileList')->name('lessons.fileList');
+    Route::post('delete', 'LessonsController@delete')->name('lessons.delete');
+    Route::post('delete-student', 'LessonsController@deleteStudent')->name('lessons.deleteStudent');
 });

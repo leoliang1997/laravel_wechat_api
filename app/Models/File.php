@@ -25,6 +25,8 @@ use Illuminate\Database\Eloquent\Model;
  * @mixin \Eloquent
  * @property int $status
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\File whereStatus($value)
+ * @property string $cid
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\File whereCid($value)
  */
 class File extends Model
 {
@@ -32,7 +34,7 @@ class File extends Model
     public const STATUS_DELETE = 1; //文件状态-删除
 
     protected $fillable = [
-        'file_name', 'url', 'uid', 'status'
+        'file_name', 'url', 'uid', 'status', 'cid'
     ];
 
 }

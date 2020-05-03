@@ -19,6 +19,7 @@ class CreateFilesTable extends Migration
             $table->string('url');
             $table->string('uid');
             $table->integer('status');
+            $table->string('cid');
             $table->timestamps();
         });
     }

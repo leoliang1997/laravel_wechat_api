@@ -37,6 +37,58 @@ class LessonsController extends Controller
         return success(['cid' => $lesson->cid]);
     }
 
+    public function delete(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string'
+        ]);
+        $cid = $request->cid;
+        $lesson = Lesson::where('cid', '=', $cid)->first();
+        if (empty($lesson) || !$lesson->isMyLesson($request->user()->uid)) {
+            return error(-1, '课程不存在');
+        }
+        try {
+            \DB::beginTransaction();
+            Lesson::where('cid', '=', $cid)->delete();
+            LessonStudentRelation::where('cid', '=', $cid)->delete();
+            TeacherSignInLog::where('cid', '=', $cid)->delete();
+            StudentSignInLog::where('cid', '=', $cid)->delete();
+            \DB::commit();
+            return success();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return error(-1, '删除课程失败:'.$e->getMessage());
+        }
+    }
+
+    public function deleteStudent(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string',
+            'uid' => 'required|string'
+        ]);
+        $cid = $request->cid;
+        $studentId = $request->uid;
+        $lesson = Lesson::where('cid', '=', $cid)->first();
+        if (empty($lesson) || !$lesson->isMyLesson($request->user()->uid)) {
+            return error(-1, '课程不存在');
+        }
+        try {
+            \DB::beginTransaction();
+            LessonStudentRelation::where('uid', '=', $studentId)
+                ->where('cid', '=', $cid)
+                ->delete();
+            StudentSignInLog::where('cid', '=', $cid)
+                ->where('uid', '=', $studentId)
+                ->delete();
+            \DB::commit();
+            return success();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return error(-1, '删除学生失败:'.$e->getMessage());
+        }
+    }
+
     public function lessonList(Request $request)
     {
         $this->validate($request, [
@@ -469,6 +521,7 @@ class LessonsController extends Controller
     public function fileList(Request $request)
     {
         $this->validate($request, [
+            'cid' => 'required|string',
             'page' => 'required|int',
             'page_size' => 'required|int'
         ]);
@@ -476,6 +529,7 @@ class LessonsController extends Controller
         $totalCount = File::count();
         $offset = $request->page * $request->page_size;
         $files = File::where('status', '=', File::STATUS_NORMAL)
+            ->where('cid', '=', $request->cid)
             ->limit($request->page_size)
             ->offset($offset)
             ->get();
@@ -516,10 +570,12 @@ class LessonsController extends Controller
     {
         $this->authorize('teacher', Lesson::class);
         $this->validate($request, [
+            'cid' => 'required',
             'file' => 'required',
             'file_name' => 'required|string'
         ]);
 
+        $cid = $request->cid;
         $fileName = $request->file_name;
         $file = $request->file('file');
         $uploadPath = '/uploads/' . time();
@@ -528,6 +584,7 @@ class LessonsController extends Controller
 
         File::create([
             'file_name' => $fileName,
+            'cid' => $cid,
             'url' => $downloadUrl,
             'uid' => $request->user()->uid,
             'status' => File::STATUS_NORMAL
