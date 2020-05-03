@@ -82,9 +82,7 @@ class LessonsController extends Controller
             LessonStudentRelation::where('uid', '=', $studentId)
                 ->where('cid', '=', $cid)
                 ->delete();
-            StudentSignInLog::whereIn('kid', $kids)
-                ->whereIn('uid', '=', $studentId)
-                ->delete();
+            StudentSignInLog::whereIn('kid', $kids)->delete();
             \DB::commit();
             return success();
         } catch (\Exception $e) {
