@@ -39,7 +39,7 @@ class Lesson extends Model
     public const PREFIX = 'C';
 
     protected $fillable = [
-        'cid', 'name', 'uid', 'status'
+        'cid', 'name', 'uid', 'status', 'qa_status'
     ];
 
     protected $hidden = [];
