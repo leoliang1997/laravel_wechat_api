@@ -636,7 +636,7 @@ class LessonsController extends Controller
         $uids = [];
 
         foreach ($students as $student) {
-            $uids[] = $students->uid;
+            $uids[] = $student->uid;
         }
 
         $studentInfos = User::whereIn('uid', $uids)->get();
