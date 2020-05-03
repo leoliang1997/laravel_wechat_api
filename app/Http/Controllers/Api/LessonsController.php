@@ -403,7 +403,7 @@ class LessonsController extends Controller
         if (empty($lesson)) {
             return error(-1, '无效操作!');
         }
-
+        $lesson->qa_status = Lesson::QA_STATUS_DONE;
         $lesson->status = Lesson::STATUS_DONE;
         $lesson->save();
 
