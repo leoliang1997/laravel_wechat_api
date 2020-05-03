@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use App\Models\File;
 use App\Models\Lesson;
 use App\Models\LessonStudentRelation;
+use App\Models\Question;
 use App\Models\StudentSignInLog;
 use App\Models\TeacherSignInLog;
 use App\Models\User;
@@ -32,6 +33,7 @@ class LessonsController extends Controller
             'name' => $request->name,
             'uid' => $request->user()->uid,
             'status' => Lesson::STATUS_DONE,
+            'qa_status' => Lesson::QA_STATUS_DONE
         ]);
 
         return success(['cid' => $lesson->cid]);
@@ -43,16 +45,17 @@ class LessonsController extends Controller
             'cid' => 'required|string'
         ]);
         $cid = $request->cid;
-        $lesson = Lesson::where('cid', '=', $cid)->first();
+        $lesson = Lesson::whereCid($cid)->first();
         if (empty($lesson) || !$lesson->isMyLesson($request->user()->uid)) {
             return error(-1, '课程不存在');
         }
+        $kids = $this->getKid($cid);
         try {
             \DB::beginTransaction();
-            Lesson::where('cid', '=', $cid)->delete();
-            LessonStudentRelation::where('cid', '=', $cid)->delete();
-            TeacherSignInLog::where('cid', '=', $cid)->delete();
-            StudentSignInLog::where('cid', '=', $cid)->delete();
+            Lesson::whereCid($cid)->delete();
+            LessonStudentRelation::whereCid( $cid)->delete();
+            TeacherSignInLog::whereCid($cid)->delete();
+            StudentSignInLog::whereIn('kid', $kids)->delete();
             \DB::commit();
             return success();
         } catch (\Exception $e) {
@@ -73,13 +76,14 @@ class LessonsController extends Controller
         if (empty($lesson) || !$lesson->isMyLesson($request->user()->uid)) {
             return error(-1, '课程不存在');
         }
+        $kids = $this->getKid($cid);
         try {
             \DB::beginTransaction();
             LessonStudentRelation::where('uid', '=', $studentId)
                 ->where('cid', '=', $cid)
                 ->delete();
-            StudentSignInLog::where('cid', '=', $cid)
-                ->where('uid', '=', $studentId)
+            StudentSignInLog::whereIn('kid', $kids)
+                ->whereIn('uid', '=', $studentId)
                 ->delete();
             \DB::commit();
             return success();
@@ -87,6 +91,17 @@ class LessonsController extends Controller
             \DB::rollBack();
             return error(-1, '删除学生失败:'.$e->getMessage());
         }
+    }
+
+    private function getKid($cid)
+    {
+        $logs = TeacherSignInLog::whereCid($cid)->get();
+        $result = [];
+        foreach ($logs as $log) {
+            $result[] = $log->kid;
+        }
+
+        return $result;
     }
 
     public function lessonList(Request $request)
@@ -592,4 +607,179 @@ class LessonsController extends Controller
 
         return success();
     }
+
+    public function rollCall(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string',
+            'num' => 'required|int'
+        ]);
+
+        $cid = $request->cid;
+        $num = $request->num;
+
+        $lesson = Lesson::whereCid($cid)
+            ->whereUid($request->user()->uid)
+            ->first();
+        if (empty($lesson)) {
+            return error(-1, '课程号无效');
+        }
+
+        $allCount = LessonStudentRelation::whereCid($cid)->count();
+        if ($allCount < $num) {
+            return error(-1, 'num大于当前课程人数');
+        }
+
+        $students = LessonStudentRelation::whereCid($cid)
+            ->inRandomOrder()
+            ->limit($num)
+            ->get();
+
+        $uids = [];
+
+        foreach ($students as $student) {
+            $uids[] = $students->uid;
+        }
+
+        $studentInfos = User::whereIn('uid', $uids)->get();
+
+        $list = [];
+
+        foreach ($studentInfos as $studentInfo) {
+            $list[] = [
+                'uid' => $studentInfo->uid,
+                'name' => $studentInfo->name
+            ];
+        }
+
+        return success(['list' => $list]);
+    }
+
+    public function qaStatus(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string'
+        ]);
+
+        $lesson = Lesson::whereCid($request->cid)->first();
+        if (empty($lesson)) {
+            return error(-1, '课程号无效');
+        }
+
+        $status = $lesson->qa_status;
+
+        return success(['status' => $status]);
+    }
+
+    public function startQa(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string'
+        ]);
+
+        $lesson = Lesson::whereCid($request->cid)
+            ->whereUid($request->user()->uid)
+            ->whereQaStatus(Lesson::QA_STATUS_DONE)
+            ->first();
+        if (empty($lesson)) {
+            return error(-1, '课程号无效');
+        }
+
+        $lesson->qa_status = Lesson::QA_STATUS_NOW;
+        $lesson->save();
+
+        return success();
+    }
+
+    public function endQa(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string'
+        ]);
+
+        $lesson = Lesson::whereCid($request->cid)
+            ->whereUid($request->user()->uid)
+            ->whereQaStatus(Lesson::QA_STATUS_NOW)
+            ->first();
+        if (empty($lesson)) {
+            return error(-1, '课程号无效');
+        }
+
+        $lesson->qa_status = Lesson::QA_STATUS_DONE;
+        $lesson->save();
+
+        Question::whereCid($request->cid)->update(['status' => Question::STATUS_DONE]);
+
+        return success();
+    }
+
+    public function questionList(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string',
+            'page' => 'required|int',
+            'page_size' => 'required|int'
+        ]);
+
+        $totalCount = Question::whereCid($request->cid)
+            ->whereStatus(Question::STATUS_NOW)
+            ->count();
+
+        $offset = $request->page * $request->page_size;
+
+        $questions = Question::whereCid($request->cid)
+            ->whereStatus(Question::STATUS_NOW)
+            ->limit($request->page)
+            ->offset($offset)
+            ->get();
+
+        $list = [];
+        $uids = [];
+        foreach ($questions as $question) {
+            $uids[] = $question->uid;
+            $list[] = [
+                'uid' => $question->uid,
+                'name' => '',
+                'question' => $question->content
+            ];
+        }
+
+        $studentInfos = User::whereIn('uid', $uids)->get();
+
+        foreach ($list as $key => $value) {
+            foreach ($studentInfos as $studentInfo) {
+                if ($value['uid'] === $studentInfo->uid) {
+                    $list[$key]['name'] = $studentInfo->name;
+                    break;
+                }
+            }
+        }
+
+        return success(packageData($request->page, $request->page_size, $totalCount, $list));
+    }
+
+    public function askQuestion(Request $request)
+    {
+        $this->validate($request, [
+            'cid' => 'required|string',
+            'question' => 'required|string'
+        ]);
+
+        $lesson = Lesson::whereCid($request->cid)
+            ->whereQaStatus(Lesson::QA_STATUS_NOW)
+            ->first();
+        if (empty($lesson)) {
+            return error(-1, '未在提问时间');
+        }
+
+        Question::insert([
+            'cid' => $request->cid,
+            'uid' => $request->user()->uid,
+            'content' => $request->question,
+            'status' => Question::STATUS_NOW
+        ]);
+
+        return success();
+    }
+
 }

@@ -25,11 +25,16 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Lesson whereUid($value)
  * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Lesson whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property int $qa_status
+ * @method static \Illuminate\Database\Eloquent\Builder|\App\Models\Lesson whereQaStatus($value)
  */
 class Lesson extends Model
 {
     public const STATUS_DONE = 0; //考勤结束
     public const STATUS_NOW = 1; //正在考勤
+
+    public const QA_STATUS_DONE = 0; //提问结束
+    public const QA_STATUS_NOW = 1; //正在提问
 
     public const PREFIX = 'C';
 
